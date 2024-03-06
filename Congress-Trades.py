@@ -86,7 +86,7 @@ class FileManager:
         with open(self.filename, "r") as f:
             for line in f:
                 stock_codes.append(line.split(",")[1])
-        return (stock_codes)
+        return str(stock_codes)
 
     def read_buy_signals(self):
         """
@@ -100,7 +100,7 @@ class FileManager:
         with open(self.filename, "r") as f:
             for line in f:
                 buy_signals.append(line.split(",")[2])
-        return (buy_signals)
+        return str(buy_signals)
 
     def read_average_amounts(self):
         """
@@ -114,7 +114,7 @@ class FileManager:
         with open(self.filename, "r") as f:
             for line in f:
                 average_amounts.append(line.split(",")[3])
-        return (average_amounts)
+        return str(average_amounts)
     
     def ensure_file_exists(self):
         # Check if the file exists, and create it if it doesn't
@@ -141,7 +141,7 @@ class Stock:
     def __init__(self, stock_code, buy, average_amount, rep, date_traded, date_published):
         self.stock_code = stock_code
         self.buy = buy
-        self.average_amount = str(average_amount)
+        self.average_amount = int(average_amount)
         self.rep = rep
         self.date_traded = date_traded
         self.date_published = date_published
@@ -157,7 +157,7 @@ class Stock:
 # Function to convert a range string to an average value
 def get_average_from_range(range_str):
     min_val, max_val = map(float, re.findall(r'\d+', range_str))
-    return ((risk*((min_val + max_val) )/ 2)+1)
+    return int((risk*((min_val + max_val) )/ 2)+1)
 
 def get_stocks():
     driver = webdriver.Chrome()
@@ -222,7 +222,6 @@ def main():
     buy_signals = file_manager.read_buy_signals()
     stock_codes = file_manager.read_stock_codes()
     average_amounts = file_manager.read_average_amounts()
-    #print(buy_signals, stock_codes, average_amounts)
 
     with open(file_manager.filename, 'r+') as file:
         lines = file.readlines()
@@ -230,16 +229,17 @@ def main():
         for i, line in enumerate(lines):
             parts = line.strip().split(',')
             if len(parts) != 6:
-                continue  # Skip lines that don't have exactly six elements this is to skip lines that have already been read
+                continue  # Skip lines that don't have exactly six elements
             rep, stock_code, buy, average_amount, date_published, date_traded = parts
-            for buys, stock, amount in zip(buy_signals, stock_codes, average_amounts):
-                if buys == "buy":
-                    #r.orders.order_buy_fractional_by_price(stock, float(amount))
-                    print(f"buying {stock} at {amount}")
-                else:
-                    r.orders.order_sell_fractional_by_quantity(stock, float(amount))
-                    #print(f"selling {stock} at {amount}")
-                lines[i] = ','.join([rep, stock_code, buy, average_amount, date_published, date_traded, 'read\n'])
+            for j, (bs, sc, aa) in enumerate(zip(buy_signals, stock_codes, average_amounts)):
+                if stock_code == sc and buy == bs and average_amount == aa:
+                    if buy == "buy":
+                        r.orders.order_buy_fractional_by_price(stock_code, average_amounts)
+                        #print(f"buying {stock_code} at {int(average_amount)+1}")
+                    else:
+                        r.orders.order_sell_fractional_by_quantity(stock_code, average_amounts)
+                        #print(f"selling {stock_code} at {int(average_amount)-1}")
+                    lines[i] = ','.join([rep, stock_code, buy, average_amount, date_published, date_traded, 'read\n'])
 
         file.seek(0)
         file.writelines(lines)
