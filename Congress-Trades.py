@@ -83,8 +83,8 @@ class FileManager:
         stock_codes = []
         with open(self.filename, "r") as f:
             for line in f:
-                stock_codes.append(line.split(",")[1])
-        return str(stock_codes)
+                stock_codes.append(str(line.split(",")[1]))
+        return (stock_codes)
 
     def read_buy_signals(self):
         """
@@ -96,8 +96,8 @@ class FileManager:
         buy_signals = []
         with open(self.filename, "r") as f:
             for line in f:
-                buy_signals.append(line.split(",")[2])
-        return str(buy_signals)
+                buy_signals.append(str(line.split(",")[2]))
+        return (buy_signals)
 
     def read_average_amounts(self):
         """
@@ -109,8 +109,8 @@ class FileManager:
         average_amounts = []
         with open(self.filename, "r") as f:
             for line in f:
-                average_amounts.append(line.split(",")[3])
-        return (average_amounts)
+                average_amounts.append(int(line.split(",")[3]))
+        return average_amounts
     
     def ensure_file_exists(self):
         # Check if the file exists, and create it if it doesn't
@@ -179,7 +179,7 @@ def get_stocks():
 
         if stock_name_element and amount_element and buy_element:
             stock_name = stock_name_element.text.strip()
-            stock_code_match = re.search(r'\b[A-Z]{1,4}\b', stock_name)
+            stock_code_match = re.search(r'\b[A-Z]{1,5}\b', stock_name)
             if stock_code_match:
                 stock_code = stock_code_match.group()
             else:
@@ -223,23 +223,20 @@ def main():
         for i, line in enumerate(lines):
             parts = line.strip().split(',')
             if len(parts) != 6:
-                continue  # Skip lines that don't have exactly six elements
+                continue  # Skip lines that don't have exactly six elements this is to skip lines that have already been read
             rep, stock_code, buy, average_amount, date_published, date_traded = parts
-            for j, (bs, sc, aa) in enumerate(zip(buy_signals, stock_codes, average_amounts)):
-                if stock_code == sc and buy == bs and average_amount == aa:
-                    if buy == "buy":
-                        r.orders.order_buy_fractional_by_price(stock_code, average_amounts)
-                        #print(f"buying {stock_code} at {int(average_amount)+1}")
-                    else:
-                        r.orders.order_sell_fractional_by_quantity(stock_code, average_amounts)
-                        #print(f"selling {stock_code} at {int(average_amount)-1}")
-                    lines[i] = ','.join([rep, stock_code, buy, average_amount, date_published, date_traded, 'read\n'])
+            for buys, stock, amount in zip(buy_signals, stock_codes, average_amounts):
+                if buys == "buy":
+                    r.orders.order_buy_fractional_by_price(stock, int(amount))
+                    #print(f"buying {stock} at {amount}")
+                else:
+                    r.orders.order_sell_fractional_by_quantity(stock, int(amount))
+                    print(f"selling {stock} at {amount}")
+                lines[i] = ','.join([rep, stock_code, buy, average_amount, date_published, date_traded, 'read\n'])
 
         file.seek(0)
         file.writelines(lines)
         file.truncate()
-
-
 
     print(f"just finished reading all trades. Will check again in {delay} minutes")
 
