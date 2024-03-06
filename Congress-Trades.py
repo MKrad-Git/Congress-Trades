@@ -234,8 +234,8 @@ def main():
             rep, stock_code, buy, average_amount, date_published, date_traded = parts
             for buys, stock, amount in zip(buy_signals, stock_codes, average_amounts):
                 if buys == "buy":
-                    #r.orders.order_buy_fractional_by_price(stock, float(amount))
-                    print(f"buying {stock} at {amount}")
+                    r.orders.order_buy_fractional_by_price(stock, float(amount))
+                    #print(f"buying {stock} at {amount}")
                 else:
                     r.orders.order_sell_fractional_by_quantity(stock, float(amount))
                     #print(f"selling {stock} at {amount}")
