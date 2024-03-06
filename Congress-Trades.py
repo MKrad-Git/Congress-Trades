@@ -33,7 +33,7 @@ class FileManager:
     def __init__(self):
         self.filename = file_path
         self.ensure_file_exists()
-        
+
     def check_existing_values(self, new_line_values):
         """Check if new line values match any existing line's first 6 values."""
         with open(self.filename, 'r') as file:
@@ -42,17 +42,16 @@ class FileManager:
         for line in existing_lines:
             # Splitting the line into values separated by comma
             existing_values = line.strip().split(',')
-            
+
             # Checking if the first 6 values match
             if existing_values[:6] == new_line_values[:6]:
                 return True
-        
+
         return False
 
     def write_info(self, rep, stock_code, buy, average_amount, date_published, date_traded):
         """
         Writes stock information to a file only if it is not already present with all attributes matching.
-
         Args:
         rep (str): The name of the representative who made the trade.
         stock_code (str): The stock code.
@@ -77,7 +76,6 @@ class FileManager:
     def read_stock_codes(self):
         """
         Returns a list of stock codes from the file.
-
         Returns:
             list: A list of stock codes.
         """
@@ -91,7 +89,6 @@ class FileManager:
     def read_buy_signals(self):
         """
         Returns a list of buy signals from the file.
-
         Returns:
             list: A list of buy signals ("buy" or "sell").
         """
@@ -105,7 +102,6 @@ class FileManager:
     def read_average_amounts(self):
         """
         Returns a list of average amounts from the file.
-
         Returns:
             list: A list of average amounts.
         """
@@ -115,7 +111,7 @@ class FileManager:
             for line in f:
                 average_amounts.append(line.split(",")[3])
         return (average_amounts)
-    
+
     def ensure_file_exists(self):
         # Check if the file exists, and create it if it doesn't
         if not os.path.exists(self.filename):
@@ -125,11 +121,9 @@ class FileManager:
 '''def ensure_file_exists(filename):
     """
     Checks if the file exists, and creates it if it doesn't.
-
     Args:
         filename (str): The name of the file.
     """
-
     if not os.path.exists(filename):
         with open(filename, "w"):
             pass'''
@@ -162,10 +156,10 @@ def get_average_from_range(range_str):
 def get_stocks():
     driver = webdriver.Chrome()
     base_url = 'https://www.capitoltrades.com/trades'
-    
+
     url_params = '&'.join([f'{key}={value}' if not isinstance(value, list) else '&'.join([f'{key}={v}' for v in value]) for key, value in params.items()])
     url = f'{base_url}?{url_params}'
-    
+
     driver.get(url)
     time.sleep(5)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -197,7 +191,7 @@ def get_stocks():
             rep = representitive.text.strip()
             date_traded = date_traded.text.strip()
             date_published = date_published.text.strip()
-           
+
             Stock(stock_code, buy, average_amount, rep, date_traded, date_published)
 
     driver.quit()
@@ -234,8 +228,8 @@ def main():
             rep, stock_code, buy, average_amount, date_published, date_traded = parts
             for buys, stock, amount in zip(buy_signals, stock_codes, average_amounts):
                 if buys == "buy":
-                    r.orders.order_buy_fractional_by_price(stock, float(amount))
-                    #print(f"buying {stock} at {amount}")
+                    #r.orders.order_buy_fractional_by_price(stock, float(amount))
+                    print(f"buying {stock} at {amount}")
                 else:
                     r.orders.order_sell_fractional_by_quantity(stock, float(amount))
                     #print(f"selling {stock} at {amount}")
@@ -245,8 +239,8 @@ def main():
         file.writelines(lines)
         file.truncate()
 
-    
-        
+
+
     print(f"just finished reading all trades. Will check again in {delay} minutes")
 
 #this just runs everything it on a delay and will run indefinetly until you stop it
