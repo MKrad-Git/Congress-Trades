@@ -26,9 +26,7 @@ delay = 30 # Delay for the web scraping in minutes, how often you want it to che
 
 #must create your own .env file with your own username and password
 #gets password and username from a file so you dont have to hard code it in
-#load_dotenv()
-username = "username'
-password = "pass"
+load_dotenv()
 
 class FileManager:
 
@@ -239,8 +237,8 @@ def get_stocks():
     driver.quit()
 
 def main():
-    #r.login(os.getenv("username"),os.getenv("password"))  # Login to Robinhood
-    r.login(username, password)  # Login to Robinhood
+    r.login(os.getenv("username"),os.getenv("password"))  # Login to Robinhood
+    #r.login(username, password)  # Login to Robinhood
     get_stocks()
     #Stock.print_all_instances()
 
@@ -272,12 +270,13 @@ def main():
                 if len(lines[i].strip().split(',')) == 6:  # Check if the line has exactly 6 elements, if it doesn't we know it's been read
                     if buys == "buy":
                         print(f"buying {stock} at {amount}")
-                        #r.orders.order_buy_fractional_by_price(stock, amount)
+                        r.orders.order_buy_fractional_by_price(stock, amount)
                     else:
                         print(f"selling {stock} at {amount}")
-                        #r.orders.order_sell_fractional_by_quantity(stock, amount)
-                    # Convert amount to string before joining
-                    lines[i] = lines[i].rstrip('\n') + f',{rep},{stock},{buys},{amount},{date},{date_traded}, read\n'
+                        r.orders.order_sell_fractional_by_quantity(stock, amount)
+                    
+                    lines[i] = lines[i].rstrip('\n') + ',read\n'
+                    
             except IndexError:  # Catch specific exception for index out of range
                 print(f"Index out of range. Skipping {stock}.")
                 continue
