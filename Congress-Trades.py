@@ -26,7 +26,9 @@ delay = 30 # Delay for the web scraping in minutes, how often you want it to che
 
 #must create your own .env file with your own username and password
 #gets password and username from a file so you dont have to hard code it in
-load_dotenv()
+#load_dotenv()
+username = "misha.alias@outlook.com"
+password = "3U8*&RgZ6Xv9"
 
 class FileManager:
 
@@ -71,7 +73,24 @@ class FileManager:
 
         # If not, write the new info
         with open(self.filename, "a") as f:
-            f.write(f"{','.join(new_info)}\n")    
+            f.write(f"{','.join(new_info)}\n")  
+             
+    def read_reps(self):
+        """
+        Returns a list of average amounts from the file.
+        Returns:
+            list: A list of average amounts.
+        """
+
+        reps = []
+        with open(self.filename, "r") as f:
+            for line in f:
+                try:
+                    reps.append(str(line.split(",")[0]))
+                except:
+                    reps.append("Error")
+        return reps
+     
 
     def read_stock_codes(self):
         """
@@ -83,7 +102,10 @@ class FileManager:
         stock_codes = []
         with open(self.filename, "r") as f:
             for line in f:
-                stock_codes.append(str(line.split(",")[1]))
+                try:
+                    stock_codes.append(str(line.split(",")[1]))
+                except:
+                    stock_codes.append("Error")
         return (stock_codes)
 
     def read_buy_signals(self):
@@ -96,7 +118,10 @@ class FileManager:
         buy_signals = []
         with open(self.filename, "r") as f:
             for line in f:
-                buy_signals.append(str(line.split(",")[2]))
+                try:
+                    buy_signals.append(str(line.split(",")[2]))
+                except:
+                    buy_signals.append("Error")
         return (buy_signals)
 
     def read_average_amounts(self):
@@ -109,8 +134,34 @@ class FileManager:
         average_amounts = []
         with open(self.filename, "r") as f:
             for line in f:
-                average_amounts.append(int(line.split(",")[3]))
+                average_amounts.append(float(line.split(",")[3]))
         return average_amounts
+    
+    def read_dates(self):
+        """
+        Returns a list of average amounts from the file.
+        Returns:
+            list: A list of average amounts.
+        """
+
+        dates = []
+        with open(self.filename, "r") as f:
+            for line in f:
+                dates.append(str(line.split(",")[4]))
+        return dates
+    
+    def read_dates_traded(self):
+        """
+        Returns a list of average amounts from the file.
+        Returns:
+            list: A list of average amounts.
+        """
+
+        dates_traded = []
+        with open(self.filename, "r") as f:
+            for line in f:
+                dates_traded.append(str(line.split(",")[5]))
+        return dates_traded
     
     def ensure_file_exists(self):
         # Check if the file exists, and create it if it doesn't
@@ -118,15 +169,6 @@ class FileManager:
             with open(self.filename, 'w'):
                 pass
 
-'''def ensure_file_exists(filename):
-    """
-    Checks if the file exists, and creates it if it doesn't.
-    Args:
-        filename (str): The name of the file.
-    """
-    if not os.path.exists(filename):
-        with open(filename, "w"):
-            pass'''
 
 
 class Stock:
@@ -135,7 +177,7 @@ class Stock:
     def __init__(self, stock_code, buy, average_amount, rep, date_traded, date_published):
         self.stock_code = stock_code
         self.buy = buy
-        self.average_amount = int(average_amount)
+        self.average_amount = float(average_amount)
         self.rep = rep
         self.date_traded = date_traded
         self.date_published = date_published
@@ -151,7 +193,7 @@ class Stock:
 # Function to convert a range string to an average value
 def get_average_from_range(range_str):
     min_val, max_val = map(float, re.findall(r'\d+', range_str))
-    return int((risk*((min_val + max_val) )/ 2)+1)
+    return float((risk*((min_val + max_val) )/ 2)+1)
 
 def get_stocks():
     driver = webdriver.Chrome()
@@ -186,7 +228,7 @@ def get_stocks():
                 stock_code = "Stock code not found"
 
             amount_range = amount_element.text.strip()
-            average_amount = get_average_from_range(amount_range)
+            average_amount = int(get_average_from_range(amount_range))
             buy = buy_element.text.strip()
             rep = representitive.text.strip()
             date_traded = date_traded.text.strip()
@@ -197,7 +239,8 @@ def get_stocks():
     driver.quit()
 
 def main():
-    r.login(os.getenv("username"),os.getenv("password"))  # Login to Robinhood
+    #r.login(os.getenv("username"),os.getenv("password"))  # Login to Robinhood
+    r.login(username, password)  # Login to Robinhood
     get_stocks()
     #Stock.print_all_instances()
 
@@ -213,32 +256,41 @@ def main():
         )
 
 # Uses the file manager to read the stock codes, buy signals, and average amounts from the file and makes them into lists
+    reps = file_manager.read_reps()
     buy_signals = file_manager.read_buy_signals()
     stock_codes = file_manager.read_stock_codes()
     average_amounts = file_manager.read_average_amounts()
+    dates = file_manager.read_dates()
+    dates_traded = file_manager.read_dates_traded()
 
     with open(file_manager.filename, 'r+') as file:
         lines = file.readlines()
         file.seek(0)
-        for i, line in enumerate(lines):
-            parts = line.strip().split(',')
-            if len(parts) != 6:
-                continue  # Skip lines that don't have exactly six elements this is to skip lines that have already been read
-            rep, stock_code, buy, average_amount, date_published, date_traded = parts
-            for buys, stock, amount in zip(buy_signals, stock_codes, average_amounts):
-                if buys == "buy":
-                    r.orders.order_buy_fractional_by_price(stock, int(amount))
-                    #print(f"buying {stock} at {amount}")
-                else:
-                    r.orders.order_sell_fractional_by_quantity(stock, int(amount))
-                    print(f"selling {stock} at {amount}")
-                lines[i] = ','.join([rep, stock_code, buy, average_amount, date_published, date_traded, 'read\n'])
+        
+        for i, (rep, buys, stock, amount, date, date_traded) in enumerate(zip(reps, buy_signals, stock_codes, average_amounts, dates, dates_traded)):
+            try:
+                if len(lines[i].strip().split(',')) == 6:  # Check if the line has exactly 6 elements, if it doesn't we know it's been read
+                    if buys == "buy":
+                        print(f"buying {stock} at {amount}")
+                        #r.orders.order_buy_fractional_by_price(stock, amount)
+                    else:
+                        print(f"selling {stock} at {amount}")
+                        #r.orders.order_sell_fractional_by_quantity(stock, amount)
+                    # Convert amount to string before joining
+                    lines[i] = lines[i].rstrip('\n') + f',{rep},{stock},{buys},{amount},{date},{date_traded}, read\n'
+            except IndexError:  # Catch specific exception for index out of range
+                print(f"Index out of range. Skipping {stock}.")
+                continue
+            except Exception as e:  # Catch any other exceptions
+                print(f"Error occurred: {e}. Skipping {stock}.")
+                continue
 
         file.seek(0)
         file.writelines(lines)
         file.truncate()
 
-    print(f"just finished reading all trades. Will check again in {delay} minutes")
+    print(f"Just finished reading all trades. Will check again in {delay} minutes")
+
 
 #this just runs everything it on a delay and will run indefinetly until you stop it
 if __name__ == "__main__":
