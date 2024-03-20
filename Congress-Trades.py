@@ -27,8 +27,8 @@ delay = 30 # Delay for the web scraping in minutes, how often you want it to che
 #must create your own .env file with your own username and password
 #gets password and username from a file so you dont have to hard code it in
 #load_dotenv()
-username = "misha.alias@outlook.com"
-password = "3U8*&RgZ6Xv9"
+username = "username'
+password = "pass"
 
 class FileManager:
 
