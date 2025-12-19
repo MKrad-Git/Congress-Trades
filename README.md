@@ -9,7 +9,7 @@ I reccomend commenting out the everything in main except get_stocks() and Stock.
 
 ---
 ### Currently Working On:
-I am working on getting this to work with other platforms like TD. I am also wroking on a better method to writing stocks to the txt sometime congress will buy and sell the same stock on the same day I need to write code so that the difference gets written. If not addressed you might be flaged for day trading.
+I am working on getting this to work with other platforms like TD or more likely WeBull. planning on adding portfolio optimizations using sharpe ration to maximize risk adjusted returns. I am also wroking on a better method to writing stocks to the txt sometime congress will buy and sell the same stock on the same day I need to write code so that the difference gets written. If not addressed you might be flaged for day trading.
 
 ---
 ### Liability:
